@@ -359,7 +359,7 @@ describes.realWin('amp-story', {
           return expect(replaceStub).to.not.have.been.called;
         });
   });
-  describe('amp-story continueAnyway', () => {
+  describe('amp-story continue anyway', () => {
 
     it('should not display layout', () => {
       AmpStory.isBrowserSupported = () => false;
@@ -369,8 +369,9 @@ describes.realWin('amp-story', {
       story.buildCallback();
       return story.layoutCallback()
           .then(() => {
-            expect(dispatchStub)
-              .to.have.been.calledWith(Action.TOGGLE_SUPPORTED_BROWSER, false);
+            expect(dispatchStub).to.have.been.calledWith(
+                Action.TOGGLE_SUPPORTED_BROWSER, false
+            );
           });
     });
 

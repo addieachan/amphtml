@@ -47,6 +47,9 @@ const UNSUPPORTED_BROWSER_LAYER_TEMPLATE = {
           localizedStringId:
               LocalizedStringId.AMP_STORY_WARNING_UNSUPPORTED_BROWSER_TEXT,
         },
+        // The continue button functionality will only be present in the default
+        // layer. Publisher provided fallbacks will not provide user's with the
+        // ability to continue with an unsupported browser
         {
           tag: 'button',
           attrs: dict({'class': 'i-amphtml-continue-button'}),

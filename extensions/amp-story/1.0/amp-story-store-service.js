@@ -118,9 +118,6 @@ const actions = (state, action, data) => {
       return /** @type {!State} */ (Object.assign(
           {}, state, {[StateProperty.MUTED_STATE]: !!data}));
     case Action.TOGGLE_SUPPORTED_BROWSER:
-      /*if (data) {
-        dev().error(TAG, 'Cannot exit unsupported browser state.');
-      }*/
       return /** @type {!State} */ (Object.assign(
           {}, state, {[StateProperty.SUPPORTED_BROWSER_STATE]: !!data}));
     case Action.TOGGLE_SHARE_MENU:

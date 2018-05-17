@@ -1091,25 +1091,27 @@ export class AmpStory extends AMP.BaseElement {
   }
 
   /**
-   * Displays the unsupported browser UI: either the publisher provided UI, or
-   * fallbacks to a generic default.
+   * Displays changes to the support state of the browser
    * @param {boolean} isBrowserSupported
    * @private
    */
   onSupportedBrowserStateUpdate_(isBrowserSupported) {
+    const fallbackEl = this.getFallback();
     if (isBrowserSupported) {
-      //dev().error(TAG, 'No handler to exit unsupported browser state.');
-      //this.element.appendChild(this.layoutCallback(true));
-      this.contAny = true;
-      this.unsupportedBrowserLayer_.build().remove();
-      this.mutateElement(() => {
-        this.element.classList.remove('i-amphtml-story-fallback');
-      });
-      this.layoutCallback();
+      // Removes the default unsupported browser layer or throws an error
+      // if the publisher has provided their own fallback
+      if (fallbackEl) {
+        dev().error(TAG, 'No handler to exit unsupported browser state on ' +
+        'publisher provided fallback.');
+      } else {
+        this.contAny = true;
+        this.unsupportedBrowserLayer_.build().remove();
+        this.mutateElement(() => {
+          this.element.classList.remove('i-amphtml-story-fallback');
+        });
+        this.layoutCallback();
+      }
     } else {
-
-      const fallbackEl = this.getFallback();
-
       this.mutateElement(() => {
         this.element.classList.add('i-amphtml-story-fallback');
       });
