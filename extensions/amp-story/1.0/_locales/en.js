@@ -28,7 +28,7 @@ export default {
   },
   [LocalizedStringId.AMP_STORY_CONTINUE_ANYWAY_BUTTON_LABEL]: {
     string: 'Continue Anyway',
-    description: 'Button label to allow the user to continue even if they' +
+    description: 'Button label to allow the user to continue even if they ' +
         'are not using a supportive browser.',
   },
   [LocalizedStringId.AMP_STORY_CONSENT_DECLINE_BUTTON_LABEL]: {
