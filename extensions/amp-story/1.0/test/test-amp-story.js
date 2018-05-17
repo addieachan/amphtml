@@ -69,7 +69,7 @@ describes.realWin('amp-story', {
 
     element = win.document.createElement('amp-story');
     win.document.body.appendChild(element);
-
+    //AmpStory.toggleBrowseSupport = () =>
     AmpStory.isBrowserSupported = () => true;
     story = new AmpStory(element);
     // TODO(alanorozco): Test active page event triggers once the stubbable
@@ -358,6 +358,39 @@ describes.realWin('amp-story', {
         .then(() => {
           return expect(replaceStub).to.not.have.been.called;
         });
+  });
+  describe('amp-story continueAnyway', () => {
+
+    it('should not display layout', () => {
+      AmpStory.isBrowserSupported = () => false;
+      story = new AmpStory(element);
+      const dispatchStub = sandbox.stub(story.storeService_, 'dispatch');
+      createPages(story.element, 2, ['cover', 'page-4']);
+      story.buildCallback();
+      return story.layoutCallback()
+          .then(() => {
+            expect(dispatchStub)
+              .to.have.been.calledWith(Action.TOGGLE_SUPPORTED_BROWSER, false);
+          });
+    });
+
+    it('should render the amp story', () => {
+
+      AmpStory.isBrowserSupported = () => false;
+      story = new AmpStory(element);
+      createPages(story.element, 2, ['cover', 'page-1']);
+
+      story.buildCallback();
+      story.layoutCallback();
+      story.storeService_.dispatch(Action.TOGGLE_SUPPORTED_BROWSER, true);
+
+      return story.layoutCallback()
+          .then(() => {
+            expect(story.getPageCount()).to.equal(2);
+          });
+
+
+    });
   });
 
   describe('amp-story audio', () => {

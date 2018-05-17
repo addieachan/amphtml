@@ -308,6 +308,7 @@ export class AmpStory extends AMP.BaseElement {
     this.localizationService_
         .registerLocalizedStringBundle('en-xa', enXaPseudoLocaleBundle);
 
+    this.contAny = false;
     registerServiceBuilder(this.win, 'localization',
         () => this.localizationService_);
   }
@@ -555,11 +556,11 @@ export class AmpStory extends AMP.BaseElement {
 
   /** @override */
   layoutCallback() {
-    if (!AmpStory.isBrowserSupported(this.win) && !this.platform_.isBot()) {
+    if (this.contAny == false && !AmpStory.isBrowserSupported(this.win) &&
+    !this.platform_.isBot()) {
       this.storeService_.dispatch(Action.TOGGLE_SUPPORTED_BROWSER, false);
       return Promise.resolve();
     }
-
     const firstPageEl = user().assertElement(
         this.element.querySelector('amp-story-page'),
         'Story must have at least one page.');
@@ -584,6 +585,7 @@ export class AmpStory extends AMP.BaseElement {
         .then(() => {
           // Preloads and prerenders the share menu if mobile, where the share
           // button is visible.
+
           if (!this.storeService_.get(StateProperty.DESKTOP_STATE)) {
             this.shareMenu_.build();
           }
@@ -1096,21 +1098,29 @@ export class AmpStory extends AMP.BaseElement {
    */
   onSupportedBrowserStateUpdate_(isBrowserSupported) {
     if (isBrowserSupported) {
-      dev().error(TAG, 'No handler to exit unsupported browser state.');
-    }
-
-    const fallbackEl = this.getFallback();
-
-    this.mutateElement(() => {
-      this.element.classList.add('i-amphtml-story-fallback');
-    });
-
-    // Displays the publisher provided fallback, or fallbacks to the default
-    // unsupported browser layer.
-    if (fallbackEl) {
-      this.toggleFallback(true);
+      //dev().error(TAG, 'No handler to exit unsupported browser state.');
+      //this.element.appendChild(this.layoutCallback(true));
+      this.contAny = true;
+      this.unsupportedBrowserLayer_.build().remove();
+      this.mutateElement(() => {
+        this.element.classList.remove('i-amphtml-story-fallback');
+      });
+      this.layoutCallback();
     } else {
-      this.element.appendChild(this.unsupportedBrowserLayer_.build());
+
+      const fallbackEl = this.getFallback();
+
+      this.mutateElement(() => {
+        this.element.classList.add('i-amphtml-story-fallback');
+      });
+
+      // Displays the publisher provided fallback, or fallbacks to the default
+      // unsupported browser layer.
+      if (fallbackEl) {
+        this.toggleFallback(true);
+      } else {
+        this.element.appendChild(this.unsupportedBrowserLayer_.build());
+      }
     }
   }
 
@@ -1674,6 +1684,9 @@ export class AmpStory extends AMP.BaseElement {
     return this.getPageById(nextPageId);
   }
 
+  /*
+  * Gives unsupported browser state
+  */
 
   /**
    * @param {!Window} win
@@ -1682,8 +1695,9 @@ export class AmpStory extends AMP.BaseElement {
    */
   static isBrowserSupported(win) {
     return Boolean(win.CSS && win.CSS.supports &&
-        win.CSS.supports('display', 'grid'));
+    win.CSS.supports('display', 'grid'));
   }
+
 }
 
 

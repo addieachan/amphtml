@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import {Action} from './amp-story-store-service';
 import {CSS} from '../../../build/amp-story-unsupported-browser-layer-1.0.css';
 import {LocalizedStringId} from './localization';
+import {Services} from '../../../src/services';
 import {createShadowRootWithStyle} from './utils';
 import {dict} from './../../../src/utils/object';
 import {renderAsElement} from './simple-template';
@@ -25,6 +27,8 @@ import {renderAsElement} from './simple-template';
  * Full viewport black layer indicating browser is not supported.
  * @private @const {!./simple-template.ElementDef}
  */
+
+const CONTINUE_ANYWAY_BUTTON_CLASS = 'i-amphtml-continue-button';
 const UNSUPPORTED_BROWSER_LAYER_TEMPLATE = {
   tag: 'div',
   attrs: dict({'class': 'i-amphtml-story-unsupported-browser-overlay'}),
@@ -43,6 +47,12 @@ const UNSUPPORTED_BROWSER_LAYER_TEMPLATE = {
           localizedStringId:
               LocalizedStringId.AMP_STORY_WARNING_UNSUPPORTED_BROWSER_TEXT,
         },
+        {
+          tag: 'button',
+          attrs: dict({'class': 'i-amphtml-continue-button'}),
+          localizedStringId:
+              LocalizedStringId.AMP_STORY_CONTINUE_ANYWAY_BUTTON_LABEL,
+        },
       ],
     },
   ],
@@ -59,6 +69,12 @@ export class UnsupportedBrowserLayer {
 
     /** @private {?Element} */
     this.root_ = null;
+
+    /** @private {?Element} */
+    this.element_ = null;
+
+    /** @private @const {!./amp-story-store-service.AmpStoryStoreService} */
+    this.storeService_ = Services.storyStoreService(this.win_);
   }
 
   /**
@@ -68,13 +84,21 @@ export class UnsupportedBrowserLayer {
     if (this.root_) {
       return this.root_;
     }
-
     this.root_ = this.win_.document.createElement('div');
-    const overlayEl =
+    this.element_ =
         renderAsElement(this.win_.document, UNSUPPORTED_BROWSER_LAYER_TEMPLATE);
-
-    createShadowRootWithStyle(this.root_, overlayEl, CSS);
+    createShadowRootWithStyle(this.root_, this.element_, CSS);
+    const continueButton =
+      this.element_./*OK*/querySelector(`.${CONTINUE_ANYWAY_BUTTON_CLASS}`);
+    continueButton.addEventListener('click', () => {
+      this.storeService_.dispatch(Action.TOGGLE_SUPPORTED_BROWSER, true);
+    });
 
     return this.root_;
   }
+
+  get() {
+    return this.root;
+  }
+
 }
