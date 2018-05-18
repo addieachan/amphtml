@@ -22,13 +22,12 @@ import {createShadowRootWithStyle} from './utils';
 import {dict} from './../../../src/utils/object';
 import {renderAsElement} from './simple-template';
 
-
+/** @const {string} Class for the continue anyway button */
+const CONTINUE_ANYWAY_BUTTON_CLASS = 'i-amphtml-continue-button';
 /**
  * Full viewport black layer indicating browser is not supported.
  * @private @const {!./simple-template.ElementDef}
  */
-
-const CONTINUE_ANYWAY_BUTTON_CLASS = 'i-amphtml-continue-button';
 const UNSUPPORTED_BROWSER_LAYER_TEMPLATE = {
   tag: 'div',
   attrs: dict({'class': 'i-amphtml-story-unsupported-browser-overlay'}),
@@ -100,8 +99,5 @@ export class UnsupportedBrowserLayer {
     return this.root_;
   }
 
-  get() {
-    return this.root;
-  }
 
 }

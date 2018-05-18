@@ -308,7 +308,7 @@ export class AmpStory extends AMP.BaseElement {
     this.localizationService_
         .registerLocalizedStringBundle('en-xa', enXaPseudoLocaleBundle);
 
-    this.contAny = false;
+    this.continueAnyway = false;
     registerServiceBuilder(this.win, 'localization',
         () => this.localizationService_);
   }
@@ -556,8 +556,8 @@ export class AmpStory extends AMP.BaseElement {
 
   /** @override */
   layoutCallback() {
-    if (this.contAny == false && !AmpStory.isBrowserSupported(this.win) &&
-    !this.platform_.isBot()) {
+    if (this.continueAnyway == false && !AmpStory.isBrowserSupported(this.win)
+    && !this.platform_.isBot()) {
       this.storeService_.dispatch(Action.TOGGLE_SUPPORTED_BROWSER, false);
       return Promise.resolve();
     }
@@ -1104,11 +1104,12 @@ export class AmpStory extends AMP.BaseElement {
         dev().error(TAG, 'No handler to exit unsupported browser state on ' +
         'publisher provided fallback.');
       } else {
-        this.contAny = true;
-        this.unsupportedBrowserLayer_.build().remove();
+
+        removeElement(this.unsupportedBrowserLayer_.build());
         this.mutateElement(() => {
           this.element.classList.remove('i-amphtml-story-fallback');
         });
+        this.continueAnyway = true;
         this.layoutCallback();
       }
     } else {
