@@ -98,6 +98,4 @@ export class UnsupportedBrowserLayer {
 
     return this.root_;
   }
-
-
 }
