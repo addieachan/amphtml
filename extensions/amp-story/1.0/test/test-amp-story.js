@@ -379,7 +379,7 @@ describes.realWin('amp-story', {
       AmpStory.isBrowserSupported = () => false;
       story = new AmpStory(element);
       const dispatchStub = sandbox.stub(
-        story.unsupportedBrowserLayer_.storeService_, 'dispatch');
+          story.unsupportedBrowserLayer_.storeService_, 'dispatch');
       createPages(story.element, 2, ['cover', 'page-1']);
 
       story.buildCallback();
@@ -387,11 +387,11 @@ describes.realWin('amp-story', {
 
       story.unsupportedBrowserLayer_.continueButton_.click();
       return story.layoutCallback()
-            .then(() => {
-              expect(dispatchStub).to.have.been.calledWith(
+          .then(() => {
+            expect(dispatchStub).to.have.been.calledWith(
                 Action.TOGGLE_SUPPORTED_BROWSER, true
-              );
-            });
+            );
+          });
     });
   });
 

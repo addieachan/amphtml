@@ -601,10 +601,10 @@ export class AmpStory extends AMP.BaseElement {
     return storyLayoutPromise;*/
   }
 
-  supportBrowserRender(){
+  supportBrowserRender() {
     const firstPageEl = user().assertElement(
-      this.element.querySelector('amp-story-page'),
-      'Story must have at least one page.');
+        this.element.querySelector('amp-story-page'),
+        'Story must have at least one page.');
 
     const initialPageId = this.getHistoryStatePageId_() || firstPageEl.id;
 
@@ -1736,7 +1736,7 @@ export class AmpStory extends AMP.BaseElement {
     win.CSS.supports('display', 'grid'));
   }
 
-  
+
 }
 
 
