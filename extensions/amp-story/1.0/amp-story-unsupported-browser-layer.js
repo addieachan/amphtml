@@ -75,6 +75,9 @@ export class UnsupportedBrowserLayer {
     /** @private {?Element} */
     this.element_ = null;
 
+    /** @private {?Element} */
+    this.continueButton_ = null;
+
     /** @private @const {!./amp-story-store-service.AmpStoryStoreService} */
     this.storeService_ = Services.storyStoreService(this.win_);
   }
@@ -90,9 +93,9 @@ export class UnsupportedBrowserLayer {
     this.element_ =
         renderAsElement(this.win_.document, UNSUPPORTED_BROWSER_LAYER_TEMPLATE);
     createShadowRootWithStyle(this.root_, this.element_, CSS);
-    const continueButton =
+    this.continueButton_ =
       this.element_./*OK*/querySelector(`.${CONTINUE_ANYWAY_BUTTON_CLASS}`);
-    continueButton.addEventListener('click', () => {
+    this.continueButton_.addEventListener('click', () => {
       this.storeService_.dispatch(Action.TOGGLE_SUPPORTED_BROWSER, true);
     });
 

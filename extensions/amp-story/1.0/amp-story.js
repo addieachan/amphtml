@@ -308,7 +308,6 @@ export class AmpStory extends AMP.BaseElement {
     this.localizationService_
         .registerLocalizedStringBundle('en-xa', enXaPseudoLocaleBundle);
 
-    this.continueAnyway = false;
     registerServiceBuilder(this.win, 'localization',
         () => this.localizationService_);
   }
@@ -556,12 +555,13 @@ export class AmpStory extends AMP.BaseElement {
 
   /** @override */
   layoutCallback() {
-    if (this.continueAnyway == false && !AmpStory.isBrowserSupported(this.win)
+    if (!AmpStory.isBrowserSupported(this.win)
     && !this.platform_.isBot()) {
       this.storeService_.dispatch(Action.TOGGLE_SUPPORTED_BROWSER, false);
       return Promise.resolve();
     }
-    const firstPageEl = user().assertElement(
+    return this.supportBrowserRender();
+    /*const firstPageEl = user().assertElement(
         this.element.querySelector('amp-story-page'),
         'Story must have at least one page.');
 
@@ -598,10 +598,49 @@ export class AmpStory extends AMP.BaseElement {
 
     this.validateConsent_();
 
-    return storyLayoutPromise;
+    return storyLayoutPromise;*/
   }
 
+  supportBrowserRender(){
+    const firstPageEl = user().assertElement(
+      this.element.querySelector('amp-story-page'),
+      'Story must have at least one page.');
 
+    const initialPageId = this.getHistoryStatePageId_() || firstPageEl.id;
+
+    if (!this.paginationButtons_) {
+      this.buildPaginationButtons_();
+    }
+
+    this.initializeBookend_();
+
+    const storyLayoutPromise = this.initializePages_()
+        .then(() => this.buildSystemLayer_())
+        .then(() => {
+          this.pages_.forEach(page => {
+            page.setActive(false);
+          });
+        })
+        .then(() => this.switchTo_(initialPageId))
+        .then(() => this.preloadPagesByDistance_())
+        .then(() => {
+          // Preloads and prerenders the share menu if mobile, where the share
+          // button is visible.
+
+          if (!this.storeService_.get(StateProperty.DESKTOP_STATE)) {
+            this.shareMenu_.build();
+          }
+        });
+
+    // Do not block the layout callback on the completion of these promises, as
+    // that prevents descendents from being laid out (and therefore loaded).
+    storyLayoutPromise.then(() => this.whenPagesLoaded_(PAGE_LOAD_TIMEOUT_MS))
+        .then(() => this.markStoryAsLoaded_());
+
+    this.validateConsent_();
+
+    return storyLayoutPromise;
+  }
   /**
    * @param {number} timeoutMs The maximum amount of time to wait, in
    *     milliseconds.
@@ -1104,13 +1143,11 @@ export class AmpStory extends AMP.BaseElement {
         dev().error(TAG, 'No handler to exit unsupported browser state on ' +
         'publisher provided fallback.');
       } else {
-
         removeElement(this.unsupportedBrowserLayer_.build());
         this.mutateElement(() => {
           this.element.classList.remove('i-amphtml-story-fallback');
         });
-        this.continueAnyway = true;
-        this.layoutCallback();
+        this.supportBrowserRender();
       }
     } else {
       this.mutateElement(() => {
@@ -1687,20 +1724,19 @@ export class AmpStory extends AMP.BaseElement {
     return this.getPageById(nextPageId);
   }
 
-  /*
-  * Gives unsupported browser state
-  */
-
   /**
+   * Gives unsupported browser state
    * @param {!Window} win
    * @return {boolean} true if the user's browser supports the features needed
    *     for amp-story.
    */
   static isBrowserSupported(win) {
+    return false;
     return Boolean(win.CSS && win.CSS.supports &&
     win.CSS.supports('display', 'grid'));
   }
 
+  
 }
 
 
