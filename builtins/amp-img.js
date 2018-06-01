@@ -61,6 +61,8 @@ export class AmpImg extends BaseElement {
     this.count = 0;
 
     this.src = null;
+
+    this.blurContainer = null;
   }
 
   /** @override */
@@ -163,7 +165,32 @@ export class AmpImg extends BaseElement {
     return dataUrl;
   }
 
+  createBlur(){
+    //if (this.element.hasAttribute('blur')) {
+      this.useBlr = true;
+      const hexString = this.element.getAttribute('blur');
+      //alert(hexString);
 
+      const img = new Image;
+      this.blurContainer = document.createElement('div');
+      const w = parseInt(this.element.getAttribute("width"), 10);
+      const h = parseInt(this.element.getAttribute("height"), 10);
+      const dataUrl =
+        this.toDataURL(
+            this.asRgbaBytes(
+                this.parseBitmap(
+                    hexString)),
+            5, 5);
+        this.blurContainer.classList.add('blur-layer');
+
+      img.src = dataUrl;
+      img.width = w;
+      img.height = h;
+    
+      this.blurSrc = dataUrl;
+      this.blurContainer.appendChild(img);
+    //}
+  }
   toRgba(hex) {
     return [
       parseInt(hex.substr(0, 2), 16),
@@ -201,33 +228,12 @@ export class AmpImg extends BaseElement {
     }
 
 //////////////////////////////////////////////////////////////////////////////////
-    if (this.element.hasAttribute('blur')) {
-      this.useBlr = true;
-      const hexString = this.element.getAttribute('blur');
-      //alert(hexString);
-
-      const img = new Image;
-      const container = document.createElement('div');
-      const w = parseInt(this.element.getAttribute("width"), 10);
-      const h = parseInt(this.element.getAttribute("height"), 10);
-      const dataUrl =
-        this.toDataURL(
-            this.asRgbaBytes(
-                this.parseBitmap(
-                    hexString)),
-            5, 5);
-      container.classList.add('blur-layer');
-
-      img.src = dataUrl;
-      img.width = w;
-      img.height = h;
     
-      this.blurSrc = dataUrl;
-      container.appendChild(img);
+    if(this.element.hasAttribute('blur')){
+      this.createBlur();
+      this.element.appendChild(this.blurContainer);
     }
-
-
-
+    
 
 
 
@@ -315,6 +321,8 @@ export class AmpImg extends BaseElement {
  loadImage() {
   return new Promise(resolve => setTimeout(() => { 
     this.img_.setAttribute('src', this.src);
+    this.img_.style.opacity = 1;
+    this.blurContainer.style.opacity = 0;
     setTimeout(resolve, TRANSITION_TIME);
   }, DELAY));
     
@@ -342,13 +350,17 @@ export class AmpImg extends BaseElement {
       
       if(this.blurSrc && this.useBlr){
         //alert("hi");
-        this.img_.setAttribute('src', this.blurSrc);
-        console.log("blur"+this.count +' ' +this.img_.getAttribute('src'))
+        this.blurContainer.style.opacity = 1;
+        //this.img_.setAttribute('src', this.blurSrc);
+        //console.log("blur"+this.count +' ' +this.img_.getAttribute('src'))
         //this.useBlr = false;
-      } else {
-        this.img_.setAttribute('src', src);
-        console.log("res"+this.count+ ' ' + this.img_.getAttribute('src'))
       }
+     //} else {
+      this.img_.style.opacity = 0;
+        this.img_.setAttribute('src', src);
+        console.log("res"+this.count+ ' ' + this.img_.getAttribute('src'));
+        this.img
+      //}
       this.count++;
     }
 
