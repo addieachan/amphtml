@@ -28,7 +28,11 @@ const ATTRIBUTES_TO_PROPAGATE = ['alt', 'title', 'referrerpolicy', 'aria-label',
   'aria-describedby', 'aria-labelledby'];
 
 const EXPERIMENTAL_ATTRIBUTES_TO_PROPAGATE = ATTRIBUTES_TO_PROPAGATE
-    .concat(['srcset', 'src', 'sizes']);
+    .concat(['srcset', 'src', 'sizes', 'blur']);
+
+const DELAY = 2000;
+
+const TRANSITION_TIME = 1000;
 
 export class AmpImg extends BaseElement {
 
@@ -50,10 +54,18 @@ export class AmpImg extends BaseElement {
 
     /** @private @const {boolean} */
     this.useNativeSrcset_ = isExperimentOn(this.win, 'amp-img-native-srcset');
+
+    this.blurSrc = null;
+    this.useBlr = false;
+
+    this.count = 0;
+
+    this.src = null;
   }
 
   /** @override */
   mutatedAttributesCallback(mutations) {
+    alert("swa");
     let mutated = false;
     if (!this.useNativeSrcset_) {
       if (mutations['srcset'] !== undefined) {
@@ -68,6 +80,7 @@ export class AmpImg extends BaseElement {
       }
       // This element may not have been laid out yet.
       if (mutated && this.img_) {
+        
         this.updateImageSrc_();
       }
     }
@@ -120,6 +133,45 @@ export class AmpImg extends BaseElement {
     return isLayoutSizeDefined(layout);
   }
 
+  parseBitmap(str) {
+    return str.trim().split(/\s+/g);
+  }
+
+  asRgbaBytes(hexArray) {
+    return hexArray.map(this.toRgba)
+        .reduce((a, b) => a.concat(b));
+  }
+
+  toDataURL(bytes, w, h) {
+    let canvas = document.createElement('CANVAS');
+    let ctx = canvas.getContext('2d');
+    let imgData = ctx.createImageData(w, h);
+  
+    canvas.height = w;
+    canvas.width = h;
+  
+    bytes.forEach((byte, i) => (imgData.data[i] = byte));
+  
+    ctx.putImageData(imgData, 0, 0);
+  
+    const dataUrl = canvas.toDataURL('png');
+    
+    canvas = null; // GC
+    ctx = null; // GC
+    imgData = null; // Gc
+    
+    return dataUrl;
+  }
+
+
+  toRgba(hex) {
+    return [
+      parseInt(hex.substr(0, 2), 16),
+      parseInt(hex.substr(2, 2), 16),
+      parseInt(hex.substr(4, 2), 16),
+      255,   
+    ];
+  }
   /**
    * Create the actual image element and set up instance variables.
    * Called lazily in the first `#layoutCallback`.
@@ -131,6 +183,7 @@ export class AmpImg extends BaseElement {
     if (!this.useNativeSrcset_ && !this.srcset_) {
       this.srcset_ = srcsetFromElement(this.element);
     }
+    this.src = this.element.getAttribute('src');
     // If this amp-img IS the fallback then don't allow it to have its own
     // fallback to stop from nested fallback abuse.
     this.allowImgLoadFallback_ = !this.element.hasAttribute('fallback');
@@ -140,12 +193,45 @@ export class AmpImg extends BaseElement {
     if (this.element.hasAttribute('i-amphtml-ssr')) {
       this.img_ = this.element.querySelector('img');
     }
+    
     this.img_ = this.img_ || new Image();
     this.img_.setAttribute('decoding', 'async');
     if (this.element.id) {
       this.img_.setAttribute('amp-img-id', this.element.id);
     }
 
+//////////////////////////////////////////////////////////////////////////////////
+    if (this.element.hasAttribute('blur')) {
+      this.useBlr = true;
+      const hexString = this.element.getAttribute('blur');
+      //alert(hexString);
+
+      const img = new Image;
+      const container = document.createElement('div');
+      const w = parseInt(this.element.getAttribute("width"), 10);
+      const h = parseInt(this.element.getAttribute("height"), 10);
+      const dataUrl =
+        this.toDataURL(
+            this.asRgbaBytes(
+                this.parseBitmap(
+                    hexString)),
+            5, 5);
+      container.classList.add('blur-layer');
+
+      img.src = dataUrl;
+      img.width = w;
+      img.height = h;
+    
+      this.blurSrc = dataUrl;
+      container.appendChild(img);
+    }
+
+
+
+
+
+
+    ////////////////////////////////////////////////////////////////////////////////
     // Remove role=img otherwise this breaks screen-readers focus and
     // only read "Graphic" when using only 'alt'.
     if (this.element.getAttribute('role') == 'img') {
@@ -188,6 +274,7 @@ export class AmpImg extends BaseElement {
   /** @override */
   layoutCallback() {
     this.initialize_();
+    //console.log("later skater");
     let promise = this.updateImageSrc_();
 
     // We only allow to fallback on error on the initial layoutCallback
@@ -218,11 +305,25 @@ export class AmpImg extends BaseElement {
     }
   }
 
+
+  blurAnim(t, v) {
+    return new Promise(function(resolve) { 
+        setTimeout(resolve.bind(null, v), t)
+    });
+ }
+
+ loadImage() {
+  return new Promise(resolve => setTimeout(() => { 
+    this.img_.setAttribute('src', this.src);
+    setTimeout(resolve, TRANSITION_TIME);
+  }, DELAY));
+    
+}
   /**
    * @return {!Promise}
    * @private
    */
-  updateImageSrc_() {
+  updateImageSrc_(){
     if (this.getLayoutWidth() <= 0) {
       return Promise.resolve();
     }
@@ -233,11 +334,22 @@ export class AmpImg extends BaseElement {
           // just in case.
           this.getViewport().getWidth() || this.win.screen.width,
           this.getDpr());
-      if (src == this.img_.getAttribute('src')) {
+      if (src == this.img_.getAttribute('src') ) {
         return Promise.resolve();
       }
 
-      this.img_.setAttribute('src', src);
+      
+      
+      if(this.blurSrc && this.useBlr){
+        //alert("hi");
+        this.img_.setAttribute('src', this.blurSrc);
+        console.log("blur"+this.count +' ' +this.img_.getAttribute('src'))
+        //this.useBlr = false;
+      } else {
+        this.img_.setAttribute('src', src);
+        console.log("res"+this.count+ ' ' + this.img_.getAttribute('src'))
+      }
+      this.count++;
     }
 
     return this.loadPromise(this.img_).then(() => {
@@ -249,10 +361,16 @@ export class AmpImg extends BaseElement {
           this.toggleFallback(false);
         });
       }
+    })
+    .then(() => {
+      this.blurAnim(1000);
+    })
+    .then(() => {
+      this.loadImage();
     });
   }
 
-  onImgLoadingError_() {
+  onImgLoadingError_(){
     this.getVsync().mutate(() => {
       this.img_.classList.add('i-amphtml-ghost');
       this.toggleFallback(true);
