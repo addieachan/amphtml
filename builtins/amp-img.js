@@ -222,6 +222,14 @@ export class AmpImg extends BaseElement {
     }
     
     this.img_ = this.img_ || new Image();
+    if(this.element.hasAttribute('blur')){
+      this.img_.style.opacity = 0;
+
+      this.createBlur();
+      this.element.appendChild(this.blurContainer);
+      this.blurContainer.style.opacity = 1;
+    }
+    
     this.img_.setAttribute('decoding', 'async');
     if (this.element.id) {
       this.img_.setAttribute('amp-img-id', this.element.id);
@@ -229,10 +237,6 @@ export class AmpImg extends BaseElement {
 
 //////////////////////////////////////////////////////////////////////////////////
     
-    if(this.element.hasAttribute('blur')){
-      this.createBlur();
-      this.element.appendChild(this.blurContainer);
-    }
     
 
 
@@ -320,10 +324,19 @@ export class AmpImg extends BaseElement {
 
  loadImage() {
   return new Promise(resolve => setTimeout(() => { 
+    if(this.blurContainer){
     this.img_.setAttribute('src', this.src);
-    this.img_.style.opacity = 1;
-    this.blurContainer.style.opacity = 0;
-    setTimeout(resolve, TRANSITION_TIME);
+    const getIm = this.img_;
+    const blurCont = this.blurContainer;
+    var i = 0;
+    var anim = setInterval(function(){
+      if(i==100){
+        clearInterval(anim);
+      }
+      getIm.style.opacity = i*0.01;
+      blurCont.style.opacity = 1.0 -(i*0.01);
+      i++;
+    }, 10);}
   }, DELAY));
     
 }
@@ -374,9 +387,9 @@ export class AmpImg extends BaseElement {
         });
       }
     })
-    .then(() => {
+    /*.then(() => {
       this.blurAnim(1000);
-    })
+    })* */
     .then(() => {
       this.loadImage();
     });
