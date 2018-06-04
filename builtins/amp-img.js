@@ -224,10 +224,10 @@ export class AmpImg extends BaseElement {
     this.img_ = this.img_ || new Image();
     if(this.element.hasAttribute('blur')){
       this.img_.style.opacity = 0;
-
       this.createBlur();
       this.element.appendChild(this.blurContainer);
       this.blurContainer.style.opacity = 1;
+      this.blurContainer.style.filter = "blur(10px)"; 
     }
     
     this.img_.setAttribute('decoding', 'async');
@@ -337,7 +337,7 @@ export class AmpImg extends BaseElement {
       blurCont.style.opacity = 1.0 -(i*0.01);
       i++;
     }, 10);}
-  }, DELAY));
+  }, 800));
     
 }
   /**
