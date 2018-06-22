@@ -51,7 +51,6 @@ import {
 } from '../../../src/gesture-recognizers';
 import {EventType, dispatch} from './events';
 import {Gestures} from '../../../src/gesture';
-import {InfoDialog} from './amp-story-info-dialog';
 import {KeyCodes} from '../../../src/utils/key-codes';
 import {Layout} from '../../../src/layout';
 import {
@@ -207,20 +206,6 @@ export class AmpStory extends AMP.BaseElement {
     /** @const @private {!../../../src/service/vsync-impl.Vsync} */
     this.vsync_ = this.getVsync();
 
-    /** @private @const {!LocalizationService} */
-    this.localizationService_ = new LocalizationService(this.win);
-    this.localizationService_
-        .registerLocalizedStringBundle('default', LocalizedStringsDefault)
-        .registerLocalizedStringBundle('en', LocalizedStringsEn);
-
-    const enXaPseudoLocaleBundle =
-        createPseudoLocale(LocalizedStringsEn, s => `[${s} one two]`);
-    this.localizationService_
-        .registerLocalizedStringBundle('en-xa', enXaPseudoLocaleBundle);
-
-    registerServiceBuilder(
-        this.win, 'localization-v01', () => this.localizationService_);
-
     /** @private @const {!Bookend} */
     this.bookend_ = new Bookend(this.win, this.element);
 
@@ -289,6 +274,20 @@ export class AmpStory extends AMP.BaseElement {
 
     /** @private @const {!../../../src/service/platform-impl.Platform} */
     this.platform_ = Services.platformFor(this.win);
+
+    /** @private @const {!LocalizationService} */
+    this.localizationService_ = new LocalizationService(this.win);
+    this.localizationService_
+        .registerLocalizedStringBundle('default', LocalizedStringsDefault)
+        .registerLocalizedStringBundle('en', LocalizedStringsEn);
+
+    const enXaPseudoLocaleBundle =
+        createPseudoLocale(LocalizedStringsEn, s => `[${s} one two]`);
+    this.localizationService_
+        .registerLocalizedStringBundle('en-xa', enXaPseudoLocaleBundle);
+
+    registerServiceBuilder(
+        this.win, 'localization-v01', () => this.localizationService_);
   }
 
 
@@ -437,11 +436,11 @@ export class AmpStory extends AMP.BaseElement {
 
     // Shows "tap to navigate" hint when swiping.
     gestures.onGesture(SwipeXYRecognizer, gesture => {
-      const {deltaX} = gesture.data;
+      const {deltaX, deltaY} = gesture.data;
       if (this.storeService_.get(StateProperty.BOOKEND_STATE)) {
         return;
       }
-      if (!this.isSwipeLargeEnoughForHint_(deltaX)) {
+      if (!this.isSwipeLargeEnoughForHint_(deltaX, deltaY)) {
         return;
       }
       if (!this.storeService_
@@ -455,11 +454,14 @@ export class AmpStory extends AMP.BaseElement {
 
   /**
    * @param {number} deltaX
+   * @param {number} deltaY
    * @return {boolean}
    * @private
    */
-  isSwipeLargeEnoughForHint_(deltaX) {
-    return (Math.abs(deltaX) >= MIN_SWIPE_FOR_HINT_OVERLAY_PX);
+  isSwipeLargeEnoughForHint_(deltaX, deltaY) {
+    const sideSwipe = Math.abs(deltaX) >= MIN_SWIPE_FOR_HINT_OVERLAY_PX;
+    const upSwipe = (-1 * deltaY) >= MIN_SWIPE_FOR_HINT_OVERLAY_PX;
+    return sideSwipe || upSwipe;
   }
 
   /** @private */
@@ -586,12 +588,6 @@ export class AmpStory extends AMP.BaseElement {
           // button is visible.
           if (!this.storeService_.get(StateProperty.DESKTOP_STATE)) {
             this.shareMenu_.build();
-          }
-
-          const infoDialog = Services.viewerForDoc(this.element).isEmbedded() ?
-            new InfoDialog(this.win, this.element) : null;
-          if (infoDialog) {
-            infoDialog.build();
           }
         });
 
@@ -837,14 +833,12 @@ export class AmpStory extends AMP.BaseElement {
    * @param {string} targetPageId
    * @return {!Promise}
    */
+  // TODO(newmuis): Update history state
   switchTo_(targetPageId) {
+    this.storeService_.dispatch(Action.CHANGE_PAGE, targetPageId);
+
     const targetPage = this.getPageById(targetPageId);
     const pageIndex = this.getPageIndex(targetPage);
-
-    this.storeService_.dispatch(Action.CHANGE_PAGE, {
-      id: targetPageId,
-      index: pageIndex,
-    });
 
     this.updateBackground_(targetPage.element, /* initial */ !this.activePage_);
 
@@ -1077,8 +1071,7 @@ export class AmpStory extends AMP.BaseElement {
    * @return {boolean} True if the screen size matches the desktop media query.
    */
   isDesktop_() {
-    return this.desktopMedia_.matches && !this.platform_.isBot() &&
-        !isExperimentOn(this.win, 'disable-amp-story-desktop');
+    return this.desktopMedia_.matches && !this.platform_.isBot();
   }
 
   /**
