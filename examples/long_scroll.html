@@ -1,0 +1,291 @@
+<!doctype html>
+<html ⚡>
+<head>
+  <meta charset="utf-8">
+  <title>Image Galleries with amp-carousel</title>
+  <script async src="https://cdn.ampproject.org/v0.js"></script>
+  <!-- ## Setup -->
+  <!-- Import the carousel component in the header. -->
+  <script async custom-element="amp-carousel" src="https://cdn.ampproject.org/v0/amp-carousel-0.1.js"></script>
+  <!-- We will also be using the amp-fit-text component. -->
+  <script async custom-element="amp-fit-text" src="https://cdn.ampproject.org/v0/amp-fit-text-0.1.js"></script>
+  <!-- We will also be using the amp-selector component. -->
+  <script async custom-element="amp-selector" src="https://cdn.ampproject.org/v0/amp-selector-0.1.js"></script>
+  <!-- We will also be using the amp-bind component. -->
+  <script async custom-element="amp-bind" src="https://cdn.ampproject.org/v0/amp-bind-0.1.js"></script>
+
+  <link rel="canonical" href="https://ampbyexample.com/advanced/image_galleries_with_amp-carousel/">
+  <meta name="viewport" content="width=device-width,minimum-scale=1,initial-scale=1">
+  <style amp-boilerplate>body{-webkit-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-moz-animation:-amp-start 8s steps(1,end) 0s 1 normal both;-ms-animation:-amp-start 8s steps(1,end) 0s 1 normal both;animation:-amp-start 8s steps(1,end) 0s 1 normal both}@-webkit-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-moz-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-ms-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@-o-keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}@keyframes -amp-start{from{visibility:hidden}to{visibility:visible}}</style><noscript><style amp-boilerplate>body{-webkit-animation:none;-moz-animation:none;-ms-animation:none;animation:none}</style></noscript>
+  <style amp-custom>
+    #carousel-with-preview amp-img {
+      transition: opacity 1s ease-in-out;
+    }
+    body{
+        background-color: aqua;
+    }
+    div {
+        width: 90%;
+        height: 70%;
+        justify-content: center;
+        padding-top: 100px;
+        display: block;
+    }
+    .carousel-preview {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .carousel-preview button {
+      height: 40px;
+      width: 60px;
+      min-width: 60px;
+      margin: 4px;
+      padding: 0;
+    }
+    .carousel-preview .amp-carousel-slide {
+      margin: 4px;
+      padding: 0;
+    }
+    .carousel-preview button:active {
+      opacity: 0.5;
+    }
+    .carousel1, .carousel2 {
+      background: #eee;
+      margin: 16px 0;
+    }
+    .carousel1 .slide > amp-img > img{
+      object-fit: contain;
+    }
+    .carousel2 .slide > amp-img > img{
+      object-fit: contain;
+    }
+    .carousel2 .caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #ddd;
+      font-size: smaller;
+      max-height: 30%;
+    }
+    .selected {
+      border-width: 1px;
+      border-style: solid;
+    }
+
+    /* define some contants */
+    .collapsible-captions {
+      --caption-height: 32px;
+      --image-height: 300px;
+      --caption-padding: 1rem;
+      --button-size: 28px;
+      --caption-color: #f5f5f5;;
+      --caption-bg-color: #111;
+      background: var(--caption-bg-color);
+    }
+    .collapsible-captions * {
+      /* disable chrome touch highlight */
+      -webkit-tap-highlight-color: rgba(255, 255, 255, 0);
+      box-sizing: border-box;
+    }
+    /* see https://ampbyexample.com/advanced/how_to_support_images_with_unknown_dimensions/ */
+    .collapsible-captions .fixed-height-container {
+      position: relative;
+      width: 100%;
+      height: var(--image-height);
+    }
+    .collapsible-captions amp-img img {
+      object-fit: contain;
+    }
+    .collapsible-captions figure {
+      margin: 0;
+      padding: 0;
+    }
+    /* single line caption */
+    .collapsible-captions figcaption {
+      position: absolute;
+      bottom: 0;
+      margin: 0;
+      width: 100%;
+      /* inital height is one line */
+      max-height: var(--caption-height);
+      line-height: var(--caption-height);
+      padding: 0 var(--button-size);
+      /* cut text after first line and show an ellipsis */
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      /* animate expansion */
+      transition: max-height 200ms cubic-bezier(0.4, 0, 0.2, 1);
+      /* overlay the carousel icons */
+      z-index: 1000;
+      /* some styling */
+      color: var(--caption-color);
+      background: var(--caption-bg-color);      
+    }
+    /* expanded caption */
+    .collapsible-captions figcaption.expanded {
+      /* add padding and show all of the text */
+      padding: var(--button-size);
+      line-height: inherit;
+      white-space: normal;
+      text-overflow: auto;
+      max-height: calc(var(--caption-height) + var(--image-height));
+      /* show scrollbar in case caption is larger than image */
+      overflow: auto;
+    }
+    /* don't show focus highlights in chrome */
+    .collapsible-captions figcaption:focus {
+      outline: none;
+      border: none;
+    }
+    /* the expand/collapse icon */
+    .collapsible-captions figcaption span {
+      display: block;
+      position: absolute;
+      top: calc((var(--caption-height) - var(--button-size)) / 2);
+      right: 2px;
+      width: var(--button-size);
+      height: var(--button-size);
+      line-height: var(--button-size);
+      text-align: center;
+      font-size: 12px;
+      color: inherit;
+      cursor: pointer; 
+    }
+  </style>
+</head>
+<body class="amp-mode-mouse" style="opacity: 1; visibility: visible; animation: none;">
+    <div>
+    <amp-img src="https://unsplash.it/400/300?image=10"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <!--<div><amp-img src="https://unsplash.it/400/300?image=11"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=12"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=13"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=14"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=15"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=16"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=17"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=18"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=19"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=110"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=111"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=112"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=113"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=114"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=115"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=116"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>
+    <div><amp-img src="https://unsplash.it/400/300?image=117"
+    width="400"
+    height="300"
+    layout="responsive"
+    alt="a sample image"
+    low-res="4b4344 625f61 3d3535 503f3b 362e2c 4a3c37 7a6f6d 795f55 634937 695754 8e614b 696260 b59d8e 655044 5c473c 383430 706a6a c0b5af 3d3535 3b2f2f 2b2d36 7b7a7e d8d4d4 5f5a5f 201f24">
+    ></amp-img></div>-->
+
+
+</body></html>
